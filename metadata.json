@@ -1,0 +1,7 @@
+{
+  "name": "עוזר הלימודים החכם (Hebrew Study Assistant)",
+  "description": "A smart Hebrew-speaking chatbot that helps you study for exams by answering questions based solely on your uploaded materials.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
