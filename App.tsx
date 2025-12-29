@@ -7,8 +7,17 @@ import ChatMessage from './components/ChatMessage';
 import { 
   Send, GraduationCap, Bot, Menu, Sparkles, LogOut, Moon, Sun, Trash2, 
   ChevronRight, Mic, Plus, Folder, ChevronDown, FolderPlus, FileText, X, Share2, Eye, Square,
-  RefreshCw, LogIn, Link, Eraser, Info
+  RefreshCw, LogIn, Link, Eraser, Info, User as UserIcon, Globe, Lock, Search, AlertCircle, ChevronLeft
 } from 'lucide-react';
+
+// Pre-loaded files for "מבנים אלגבריים 2"
+const DEFAULT_ALGEBRA_FILES: Attachment[] = [
+  { name: 'AS2_Targil_1_Groups.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 102400, extractedText: 'תרגיל 1: חבורות ותתי חבורות, משפט לגרנז' },
+  { name: 'AS2_Targil_2_Normal_Subgroups.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 124000, extractedText: 'תרגיל 2: תתי חבורות נורמליות וחבורות מנה' },
+  { name: 'AS2_Targil_3_Homomorphisms.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 98000, extractedText: 'תרגיל 3: הומומורפיזמים ומשפטי האיזומורפיזם' },
+  { name: 'AS2_Targil_4_Rings.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 115000, extractedText: 'תרגיל 4: מבוא לחוגים, אידיאלים ותתי חוגים' },
+  { name: 'AS2_Summary_Algebraic_Structures.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 256000, extractedText: 'סיכום קורס מבנים אלגבריים 2 - כל המשפטים וההגדרות' }
+];
 
 const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void; onLogin: (provider: string) => void }> = ({ isOpen, onClose, onLogin }) => {
   if (!isOpen) return null;
@@ -18,34 +27,21 @@ const AuthModal: React.FC<{ isOpen: boolean; onClose: () => void; onLogin: (prov
         <div className="p-8 text-center space-y-6">
           <div className="flex justify-center">
             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
-              < GraduationCap size={32} />
+              <GraduationCap size={32} />
             </div>
           </div>
           <div>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white">ברוכים הבאים</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">התחבר כדי לשמור את היסטוריית הלמידה שלך</p>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white">כניסה למערכת</h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">התחבר כדי לשמור ולסנכרן את היסטוריית הלמידה האישית שלך. חומרי הלימוד נשארים גלובליים לכולם.</p>
           </div>
-
           <div className="space-y-3">
-            <button 
-              onClick={() => onLogin('Google')}
-              className="w-full flex items-center justify-center gap-3 py-3.5 bg-white dark:bg-[#2d333b] border border-slate-200 dark:border-slate-700 rounded-2xl hover:bg-slate-50 dark:hover:bg-[#343b44] transition-all font-bold text-slate-700 dark:text-slate-200 shadow-sm"
-            >
-              <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
-              המשך עם Google
-            </button>
-            <button 
-              onClick={() => onLogin('Apple')}
-              className="w-full flex items-center justify-center gap-3 py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl hover:bg-black dark:hover:bg-slate-100 transition-all font-bold shadow-sm"
-            >
-              <svg viewBox="0 0 384 512" className="w-5 h-5 fill-current"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-              המשך עם Apple
+            <button onClick={() => onLogin('Google')} className="w-full flex items-center justify-center gap-3 py-3.5 bg-white dark:bg-[#2d333b] border border-slate-200 dark:border-slate-700 rounded-2xl hover:bg-slate-50 transition-all font-bold text-slate-700 dark:text-slate-200 shadow-sm">
+              <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" /> המשך עם Google
             </button>
           </div>
-
-          <button onClick={onClose} className="text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium">
-            אולי מאוחר יותר
-          </button>
+          <div className="pt-2">
+            <button onClick={onClose} className="text-sm text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium transition-colors">המשך כאורח</button>
+          </div>
         </div>
       </div>
     </div>
@@ -60,199 +56,143 @@ const SUGGESTED_QUESTIONS = [
 ];
 
 const App: React.FC = () => {
+  const GLOBAL_KNOWLEDGE_KEY = 'study_shared_global_db_v2';
+  const PRIVATE_HISTORY_KEY = 'study_private_user_chats_v2';
+  const THEME_KEY = 'study_ui_theme_pref';
+  const USER_KEY = 'study_active_user';
+
   const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = localStorage.getItem('study_categories');
+    const saved = localStorage.getItem(GLOBAL_KNOWLEDGE_KEY);
     if (saved) return JSON.parse(saved);
     return [{
       id: 'algebraic-structures-2',
       name: 'מבנים אלגבריים 2',
-      conversations: [],
-      attachments: [],
+      attachments: DEFAULT_ALGEBRA_FILES,
       updatedAt: Date.now()
     }];
   });
 
+  const [allConversations, setAllConversations] = useState<Conversation[]>(() => {
+    const saved = localStorage.getItem(PRIVATE_HISTORY_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem(USER_KEY);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [searchTerm, setSearchTerm] = useState('');
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(categories[0]?.id || null);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [showFileManager, setShowFileManager] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [user, setUser] = useState<UserProfile | null>(() => {
-    const saved = localStorage.getItem('study_user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem(THEME_KEY) === 'dark');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<AppStatus>(AppStatus.IDLE);
   const [error, setError] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set([categories[0]?.id]));
+  const [showRespectfulWarning, setShowRespectfulWarning] = useState(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const isAutoScrolling = useRef(true);
 
-  const activeCategory = useMemo(() => 
-    categories.find(c => c.id === activeCategoryId), 
-    [categories, activeCategoryId]
-  );
+  const currentUserId = user ? user.id : 'guest';
 
-  const activeConversation = useMemo(() => 
-    activeCategory?.conversations.find(c => c.id === activeConvId),
-    [activeCategory, activeConvId]
-  );
-
-  const messages = activeConversation?.messages || [];
-
-  // Consistent persistence
-  useEffect(() => {
-    localStorage.setItem('study_categories', JSON.stringify(categories));
-  }, [categories]);
-
-  useEffect(() => {
-    if (user) localStorage.setItem('study_user', JSON.stringify(user));
-    else localStorage.removeItem('study_user');
-  }, [user]);
-
+  useEffect(() => { localStorage.setItem(GLOBAL_KNOWLEDGE_KEY, JSON.stringify(categories)); }, [categories]);
+  useEffect(() => { localStorage.setItem(PRIVATE_HISTORY_KEY, JSON.stringify(allConversations)); }, [allConversations]);
+  useEffect(() => { if (user) localStorage.setItem(USER_KEY, JSON.stringify(user)); else localStorage.removeItem(USER_KEY); }, [user]);
   useEffect(() => {
     const html = document.documentElement;
-    if (darkMode) {
-      html.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      html.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    if (darkMode) html.classList.add('dark'); else html.classList.remove('dark');
+    localStorage.setItem(THEME_KEY, darkMode ? 'dark' : 'light');
   }, [darkMode]);
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 240)}px`;
+      const newHeight = Math.min(textareaRef.current.scrollHeight, 240);
+      textareaRef.current.style.height = `${newHeight}px`;
     }
   }, [input]);
 
-  const scrollToBottom = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-    }
+  const userConversations = useMemo(() => allConversations.filter(c => c.userId === currentUserId), [allConversations, currentUserId]);
+  const filteredCategories = useMemo(() => {
+    if (!searchTerm.trim()) return categories;
+    const lowerSearch = searchTerm.toLowerCase();
+    return categories.filter(cat => {
+      const nameMatch = cat.name.toLowerCase().includes(lowerSearch);
+      const fileMatch = cat.attachments.some(att => att.name.toLowerCase().includes(lowerSearch) || (att.extractedText && att.extractedText.toLowerCase().includes(lowerSearch)));
+      const convMatch = userConversations.some(c => c.categoryId === cat.id && c.title.toLowerCase().includes(lowerSearch));
+      return nameMatch || fileMatch || convMatch;
+    });
+  }, [categories, searchTerm, userConversations]);
+
+  const activeCategory = useMemo(() => categories.find(c => c.id === activeCategoryId), [categories, activeCategoryId]);
+  const activeConversation = useMemo(() => userConversations.find(c => c.id === activeConvId), [userConversations, activeConvId]);
+  const messages = activeConversation?.messages || [];
+
+  const toggleCategoryExpansion = (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const next = new Set(expandedCategories);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setExpandedCategories(next);
   };
 
-  useEffect(() => {
-    if (isAutoScrolling.current) scrollToBottom();
-  }, [messages, status]);
-
-  const toggleCategory = (id: string) => {
-    const next = new Set(expandedCategories);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setExpandedCategories(next);
+  const selectCategory = (id: string) => {
     setActiveCategoryId(id);
     setActiveConvId(null);
     setShowFileManager(false);
+    if (!expandedCategories.has(id)) toggleCategoryExpansion(id);
   };
 
+  const handleLogin = (provider: string) => {
+    const newUser = { id: `user_${Date.now()}`, name: 'סטודנט מצטיין', email: `student@${provider.toLowerCase()}.com`, picture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}` };
+    setAllConversations(prev => prev.map(c => c.userId === 'guest' ? { ...c, userId: newUser.id } : c));
+    setUser(newUser);
+    setIsAuthModalOpen(false);
+  };
+
+  const handleLogout = () => { if (confirm('האם להתנתק מהחשבון האישי? חומרי הלימוד הגלובליים יישארו זמינים לכולם.')) { setUser(null); setActiveConvId(null); } };
+
   const createCategory = () => {
-    const name = prompt('שם הקטגוריה החדשה:');
+    const name = prompt('שם הקטגוריה החדשה (מאגר גלובלי):');
     if (!name) return;
-    const newCat: Category = {
-      id: Date.now().toString(),
-      name,
-      conversations: [],
-      attachments: [],
-      updatedAt: Date.now()
-    };
-    setCategories([newCat, ...categories]);
+    const newCat: Category = { id: Date.now().toString(), name, attachments: [], updatedAt: Date.now() };
+    setCategories(prev => [newCat, ...prev]);
     setActiveCategoryId(newCat.id);
     setActiveConvId(null);
-    setExpandedCategories(new Set([...expandedCategories, newCat.id]));
+    setExpandedCategories(prev => new Set([...prev, newCat.id]));
   };
 
   const deleteCategory = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('האם אתה בטוח שברצונך למחוק קטגוריה זו ואת כל התוכן שבה?')) return;
+    if (!confirm('אזהרה: מחיקת קטגוריה תמחק את כל הקבצים שלה עבור כל המשתמשים במערכת. האם להמשיך?')) return;
     setCategories(prev => prev.filter(c => c.id !== id));
-    if (activeCategoryId === id) {
-      setActiveCategoryId(null);
-      setActiveConvId(null);
-    }
+    if (activeCategoryId === id) { setActiveCategoryId(null); setActiveConvId(null); }
   };
 
-  const deleteConversation = (catId: string, convId: string, e: React.MouseEvent) => {
+  const deleteConversation = (convId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm('האם אתה בטוח שברצונך למחוק שיחה זו?')) return;
-    setCategories(prev => prev.map(cat => {
-      if (cat.id !== catId) return cat;
-      return {
-        ...cat,
-        conversations: cat.conversations.filter(c => c.id !== convId)
-      };
-    }));
-    if (activeConvId === convId) {
-      setActiveConvId(null);
-    }
-  };
-
-  const handleLogin = (provider: string) => {
-    setUser({
-      id: Date.now().toString(),
-      name: 'סטודנט מצטיין',
-      email: `student@${provider.toLowerCase()}.com`,
-      picture: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`
-    });
-    setIsAuthModalOpen(false);
-  };
-
-  const handleLogout = () => {
-    if (confirm('האם להתנתק?')) setUser(null);
+    if (!confirm('האם למחוק שיחה זו מהיסטוריית הלמידה האישית שלך?')) return;
+    setAllConversations(prev => prev.filter(c => c.id !== convId));
+    if (activeConvId === convId) setActiveConvId(null);
   };
 
   const handleUpload = (newFiles: Attachment[]) => {
     if (!activeCategoryId) return;
-    setCategories(prev => prev.map(cat => {
-      if (cat.id !== activeCategoryId) return cat;
-      return {
-        ...cat,
-        attachments: [...cat.attachments, ...newFiles]
-      };
-    }));
-    if (error === "אנא העלה קבצים לקטגוריה זו לפני תחילת השיחה.") {
-      setError(null);
-    }
+    setCategories(prev => prev.map(cat => cat.id !== activeCategoryId ? cat : { ...cat, attachments: [...cat.attachments, ...newFiles], updatedAt: Date.now() }));
+    setShowRespectfulWarning(false);
   };
 
   const handleRemoveFile = (fileName: string) => {
     if (!activeCategoryId) return;
-    setCategories(prev => prev.map(cat => {
-      if (cat.id !== activeCategoryId) return cat;
-      return {
-        ...cat,
-        attachments: cat.attachments.filter(a => a.name !== fileName)
-      };
-    }));
+    setCategories(prev => prev.map(cat => cat.id !== activeCategoryId ? cat : { ...cat, attachments: cat.attachments.filter(a => a.name !== fileName), updatedAt: Date.now() }));
   };
 
-  const handleStop = () => {
-    abortControllerRef.current?.abort();
-    setStatus(AppStatus.IDLE);
-  };
-
-  const handleShare = () => {
-    if (!activeConversation) return;
-    const shareUrl = `${window.location.origin}/share/${activeConversation.id}`;
-    const shareText = `בדוק את השיחה שלי בנושא ${activeCategory?.name || 'לימודים'}:\n\n${activeConversation.title}\n\n${shareUrl}`;
-    
-    if (navigator.share) {
-      navigator.share({
-        title: activeConversation.title,
-        text: shareText,
-        url: window.location.href
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert('קישור לשיתוף הועתק ללוח!');
-    }
-  };
+  const handleStop = () => { abortControllerRef.current?.abort(); setStatus(AppStatus.IDLE); };
 
   const handleSend = async (e?: React.FormEvent, customInput?: string) => {
     e?.preventDefault();
@@ -260,123 +200,60 @@ const App: React.FC = () => {
     if (!messageToSend.trim() || status !== AppStatus.IDLE || !activeCategoryId) return;
 
     if (!activeCategory || (activeCategory.attachments.length === 0 && !activeConversation)) {
-      setError("אנא העלה קבצים לקטגוריה זו לפני תחילת השיחה.");
+      setShowRespectfulWarning(true);
+      setTimeout(() => setShowRespectfulWarning(false), 5000);
       return;
     }
 
-    setStatus(AppStatus.PROCESSING);
-    let finalInput = messageToSend;
+    const currentInput = messageToSend;
     setInput('');
-    
-    try {
-      const refinedInput = await validateHebrew(finalInput);
-      finalInput = refinedInput;
-    } catch (e) {
-      console.warn("Failed to refine input.");
-    }
-
-    setStatus(AppStatus.STREAMING);
-    isAutoScrolling.current = true;
+    setStatus(AppStatus.PROCESSING);
     
     let convId = activeConvId;
     if (!convId) {
       convId = Date.now().toString();
-      const title = await generateTitle(finalInput);
-      const newConv: Conversation = {
-        id: convId,
-        title,
-        messages: [],
-        updatedAt: Date.now()
-      };
-      
-      setCategories(prev => prev.map(cat => {
-        if (cat.id !== activeCategoryId) return cat;
-        return {
-          ...cat,
-          conversations: [newConv, ...cat.conversations],
-          updatedAt: Date.now()
-        };
-      }));
+      const title = await generateTitle(currentInput);
+      const newConv: Conversation = { id: convId, title, messages: [], updatedAt: Date.now(), categoryId: activeCategoryId, userId: currentUserId };
+      setAllConversations(prev => [newConv, ...prev]);
       setActiveConvId(convId);
-    } else {
-      generateTitle(finalInput).then(newTitle => {
-        setCategories(prev => prev.map(cat => {
-          if (cat.id !== activeCategoryId) return cat;
-          return {
-            ...cat,
-            conversations: cat.conversations.map(c => c.id === convId ? { ...c, title: newTitle } : c)
-          };
-        }));
-      });
     }
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      text: finalInput,
-      timestamp: Date.now()
-    };
-
-    setCategories(prev => prev.map(cat => {
-      if (cat.id !== activeCategoryId) return cat;
-      return {
-        ...cat,
-        conversations: cat.conversations.map(c => 
-          c.id === convId ? { ...c, messages: [...c.messages, userMessage], updatedAt: Date.now() } : c
-        )
-      };
-    }));
-
-    abortControllerRef.current = new AbortController();
+    // IMMEDIATELY display user message
+    const userMsg: Message = { id: Date.now().toString(), role: 'user', text: currentInput, timestamp: Date.now() };
     const streamMsgId = (Date.now() + 1).toString();
-    
-    setCategories(prev => prev.map(cat => {
-      if (cat.id !== activeCategoryId) return cat;
-      return {
-        ...cat,
-        conversations: cat.conversations.map(c => 
-          c.id === convId ? { 
-            ...c, 
-            messages: [...c.messages, { id: streamMsgId, role: 'model', text: '', timestamp: Date.now(), isStreaming: true }] 
-          } : c
-        )
-      };
-    }));
+
+    setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, messages: [...c.messages, userMsg], updatedAt: Date.now() } : c));
+
+    // Prepare model slot
+    setAllConversations(prev => prev.map(c => c.id === convId ? { 
+      ...c, 
+      messages: [...c.messages, { id: streamMsgId, role: 'model', text: '', timestamp: Date.now(), isStreaming: true }] 
+    } : c));
+
+    setStatus(AppStatus.STREAMING);
+    abortControllerRef.current = new AbortController();
 
     try {
-      const finalResponse = await askGemini(
-        finalInput, 
+      const response = await askGemini(
+        currentInput, 
         messages, 
         activeCategory.attachments, 
         (text) => {
-          setCategories(prev => prev.map(cat => {
-            if (cat.id !== activeCategoryId) return cat;
-            return {
-              ...cat,
-              conversations: cat.conversations.map(c => 
-                c.id === convId ? {
-                  ...c,
-                  messages: c.messages.map(m => m.id === streamMsgId ? { ...m, text } : m)
-                } : c
-              )
-            };
-          }));
+          setAllConversations(prev => prev.map(c => c.id === convId ? {
+            ...c,
+            messages: c.messages.map(m => m.id === streamMsgId ? { ...m, text } : m)
+          } : c));
         },
         abortControllerRef.current.signal
       );
       
-      setCategories(prev => prev.map(cat => {
-        if (cat.id !== activeCategoryId) return cat;
-        return {
-          ...cat,
-          conversations: cat.conversations.map(c => 
-            c.id === convId ? {
-              ...c,
-              messages: c.messages.map(m => m.id === streamMsgId ? { ...m, text: finalResponse, isStreaming: false } : m)
-            } : c
-          )
-        };
-      }));
+      // AUTO-VALIDATE Hebrew quality on complete
+      const validated = await validateHebrew(response);
+      
+      setAllConversations(prev => prev.map(c => c.id === convId ? {
+        ...c,
+        messages: c.messages.map(m => m.id === streamMsgId ? { ...m, text: validated, isStreaming: false } : m)
+      } : c));
       setStatus(AppStatus.IDLE);
     } catch (err: any) {
       setStatus(AppStatus.IDLE);
@@ -386,363 +263,144 @@ const App: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-white dark:bg-[#0e1117] overflow-hidden text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
-        onLogin={handleLogin} 
-      />
-
-      {/* Sidebar */}
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} onLogin={handleLogin} />
       <aside className={`${isSidebarOpen ? 'w-72 md:w-80' : 'w-0'} bg-slate-50 dark:bg-[#161b22] border-l border-slate-200 dark:border-slate-800 transition-all duration-300 flex flex-col z-30 overflow-hidden`}>
         <div className="p-5 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <GraduationCap className="text-blue-600" />
-            <h2 className="font-bold text-[15px] tracking-tight">מרכז הלמידה</h2>
-          </div>
-          <button onClick={() => setIsSidebarOpen(false)} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg">
-            <ChevronRight size={18} />
-          </button>
+          <div className="flex items-center gap-2"><GraduationCap className="text-blue-600" /><h2 className="font-bold text-[15px] tracking-tight">מרכז הלמידה</h2></div>
+          <button onClick={() => setIsSidebarOpen(false)} className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg"><ChevronRight size={18} /></button>
         </div>
-        
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          <button 
-            onClick={createCategory}
-            className="w-full flex items-center gap-3 p-3 bg-white dark:bg-[#1c2128] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:border-blue-500 transition-all shadow-sm active:scale-[0.98]"
-          >
-            <FolderPlus size={18} className="text-blue-500" />
-            <span className="text-sm font-bold">קטגוריה חדשה</span>
-          </button>
-
-          <div className="space-y-2">
-            {categories.map(cat => (
-              <div key={cat.id} className="space-y-1">
-                <div 
-                  onClick={() => toggleCategory(cat.id)}
-                  className={`group flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${activeCategoryId === cat.id ? 'bg-blue-50 dark:bg-blue-900/10' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <ChevronDown size={14} className={`transition-transform duration-200 ${expandedCategories.has(cat.id) ? '' : '-rotate-90'}`} />
-                    <Folder size={16} className={activeCategoryId === cat.id ? 'text-blue-500' : 'text-slate-400'} />
-                    <span className={`text-[13px] truncate font-semibold ${activeCategoryId === cat.id ? 'text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'}`}>
-                      {cat.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={(e) => { e.stopPropagation(); setActiveCategoryId(cat.id); setActiveConvId(null); }} className="p-1 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 rounded">
-                      <Plus size={14} />
-                    </button>
-                    <button onClick={(e) => deleteCategory(cat.id, e)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded">
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </div>
-
-                {expandedCategories.has(cat.id) && (
-                  <div className="mr-4 space-y-1 border-r border-slate-200 dark:border-slate-700 pr-2 mt-1 animate-in fade-in slide-in-from-right-2">
-                    {cat.conversations.length === 0 ? (
-                      <p className="text-[11px] text-slate-400 py-2 pr-4 italic">אין שיחות עדיין</p>
-                    ) : (
-                      cat.conversations.map(conv => (
-                        <button 
-                          key={conv.id}
-                          onClick={() => { setActiveCategoryId(cat.id); setActiveConvId(conv.id); }}
-                          className={`w-full group flex items-center justify-between p-2 rounded-lg text-right transition-all ${activeConvId === conv.id ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-medium' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}
-                        >
-                          <span className="text-xs truncate flex-1">{conv.title}</span>
-                          <Trash2 
-                            size={12} 
-                            className="opacity-0 group-hover:opacity-100 mr-2 hover:text-red-500" 
-                            onClick={(e) => { e.stopPropagation(); deleteConversation(cat.id, conv.id, e); }}
-                          />
-                        </button>
-                      ))
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+          <div className="relative group">
+            <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="חפש בתיקיות, שיחות או קבצים..." className="w-full bg-white dark:bg-[#1c2128] border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pr-10 pl-4 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-right" />
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider"><Globe size={12} className="text-blue-500" /> מאגר ידע משותף</div>
+            <button onClick={createCategory} className="w-full flex items-center gap-3 p-3 bg-white dark:bg-[#1c2128] border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:border-blue-500 transition-all shadow-sm group">
+              <FolderPlus size={18} className="text-blue-500" /><span className="text-sm font-bold">תיקייה גלובלית חדשה</span>
+            </button>
+            <div className="space-y-1">
+              {filteredCategories.map(cat => {
+                const isExpanded = expandedCategories.has(cat.id) || searchTerm.trim() !== '';
+                const catConvs = userConversations.filter(c => c.categoryId === cat.id);
+                return (
+                  <div key={cat.id} className="space-y-0.5">
+                    <div onClick={() => selectCategory(cat.id)} className={`group flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition-all ${activeCategoryId === cat.id ? 'bg-blue-50 dark:bg-blue-900/10' : 'hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <button onClick={(e) => toggleCategoryExpansion(cat.id, e)} className={`p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`}><ChevronDown size={14} /></button>
+                        <Folder size={16} className={activeCategoryId === cat.id ? 'text-blue-500' : 'text-slate-400'} />
+                        <span className={`text-[13px] truncate font-semibold ${activeCategoryId === cat.id ? 'text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300'}`}>{cat.name}</span>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={(e) => { e.stopPropagation(); selectCategory(cat.id); }} className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 rounded-lg"><Plus size={14} /></button>
+                        <button onClick={(e) => deleteCategory(cat.id, e)} className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded-lg"><Trash2 size={14} /></button>
+                      </div>
+                    </div>
+                    {isExpanded && (
+                      <div className="mr-5 space-y-0.5 border-r border-slate-200 dark:border-slate-700 pr-2 mt-1 mb-2 animate-in fade-in slide-in-from-right-2">
+                        {catConvs.length === 0 && !searchTerm && <p className="text-[11px] text-slate-400 py-2 pr-4 italic">אין שיחות אישיות</p>}
+                        {catConvs.map(conv => (
+                          <button key={conv.id} onClick={() => { setActiveCategoryId(cat.id); setActiveConvId(conv.id); }} className={`w-full group flex items-center justify-between p-2 rounded-lg text-right transition-all ${activeConvId === conv.id ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-bold shadow-sm' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400'}`}>
+                            <span className="text-xs truncate flex-1">{conv.title}</span>
+                            <Trash2 size={12} className="opacity-0 group-hover:opacity-100 mr-2 hover:text-red-500 transition-opacity" onClick={(e) => deleteConversation(conv.id, e)} />
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {user && (
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex-shrink-0">
-            <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-[#1c2128] border border-slate-100 dark:border-slate-700 shadow-sm">
-              <img src={user.picture} className="w-8 h-8 rounded-full" alt="profile" />
-              <div className="flex-1 min-w-0 text-right">
-                <p className="text-xs font-bold truncate">{user.name}</p>
-                <p className="text-[10px] text-slate-400 truncate">{user.email}</p>
-              </div>
-              <button onClick={handleLogout} className="p-1 text-slate-400 hover:text-red-500 transition-colors">
-                <LogOut size={14} />
-              </button>
+                );
+              })}
             </div>
           </div>
-        )}
+        </div>
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-[#1a2027]">
+          <div className="flex items-center gap-2 mb-3 px-1 text-[10px] font-bold text-slate-400 uppercase tracking-widest"><Lock size={10} /> {user ? 'היסטוריה אישית' : 'מצב אורח'}</div>
+          {user ? (
+            <div className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-[#1c2128] border border-slate-100 dark:border-slate-700 shadow-sm">
+              <img src={user.picture} className="w-8 h-8 rounded-full ring-2 ring-blue-500/20" alt="profile" />
+              <div className="flex-1 min-w-0 text-right"><p className="text-xs font-bold truncate">{user.name}</p><p className="text-[10px] text-slate-400 truncate">{user.email}</p></div>
+              <button onClick={handleLogout} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors"><LogOut size={16} /></button>
+            </div>
+          ) : (
+            <button onClick={() => setIsAuthModalOpen(true)} className="w-full flex items-center justify-center gap-2 p-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-xs font-bold shadow-md"><LogIn size={16} /> התחבר לשמירת היסטוריה</button>
+          )}
+        </div>
       </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 relative bg-white dark:bg-[#0e1117]">
+      <main className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#0e1117]">
         <nav className="h-14 flex items-center justify-between px-6 border-b border-slate-100 dark:border-slate-800/50 flex-shrink-0">
           <div className="flex items-center gap-4 overflow-hidden">
-            {!isSidebarOpen && (
-              <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-500">
-                <Menu size={20} />
-              </button>
-            )}
+            {!isSidebarOpen && <button onClick={() => setIsSidebarOpen(true)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><Menu size={20} /></button>}
             <div className="flex items-center gap-2 overflow-hidden">
-              <h1 className="text-[14px] font-bold text-slate-800 dark:text-slate-200 truncate">
-                {activeCategory?.name || 'Gemini Study Hub'}
-              </h1>
-              {activeConversation && (
-                <>
-                  <ChevronRight size={14} className="text-slate-300" />
-                  <span className="text-[13px] text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
-                    {activeConversation.title}
-                  </span>
-                </>
-              )}
+              <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg"><Globe size={14} className="text-blue-500" /><h1 className="text-[13px] font-black text-blue-700 dark:text-blue-400 truncate">{activeCategory?.name || 'בחר תיקייה'}</h1></div>
+              {activeConversation && <><ChevronLeft size={14} className="text-slate-300" /><span className="text-[13px] text-slate-500 truncate max-w-[200px] font-medium">{activeConversation.title}</span></>}
             </div>
           </div>
-          
-          <div className="flex items-center gap-2">
-            {activeConversation && (
-              <button 
-                onClick={handleShare}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-all text-xs font-bold"
-                title="שתף שיחה"
-              >
-                <Share2 size={16} />
-                <span>שתף שיחה</span>
-              </button>
-            )}
-            <button 
-              onClick={() => setDarkMode(!darkMode)} 
-              className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"
-              title="החלף מצב תצוגה"
-            >
-              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-            {user ? (
-              <div className="w-8 h-8 rounded-full border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
-                <img src={user.picture} alt="Avatar" className="w-full h-full" />
-              </div>
-            ) : (
-              <button 
-                onClick={() => setIsAuthModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-xs font-bold hover:scale-105 transition-all shadow-md"
-              >
-                <LogIn size={14} /> התחברות
-              </button>
-            )}
-          </div>
+          <button onClick={() => setDarkMode(!darkMode)} className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">{darkMode ? <Sun size={18} /> : <Moon size={18} />}</button>
         </nav>
-
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 relative">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4 custom-scrollbar">
           <div className="max-w-3xl mx-auto py-12 min-h-full flex flex-col">
-            
             {activeCategory && (
-               <div className="mb-10 p-5 bg-slate-50 dark:bg-slate-900/40 rounded-3xl border border-slate-200 dark:border-slate-800/60 shadow-sm animate-in fade-in duration-500">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-blue-600/10 text-blue-600 rounded-2xl flex items-center justify-center">
-                        <FileText size={20} />
-                      </div>
-                      <div className="text-right">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">חומרי לימוד</h3>
-                        <p className="text-[11px] text-slate-500">{activeCategory.attachments.length} קבצים זמינים</p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => setShowFileManager(!showFileManager)}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-all shadow-md active:scale-95"
-                    >
-                      {showFileManager ? <X size={14} /> : <Plus size={14} />}
-                      {showFileManager ? 'סגור' : 'נהל קבצים'}
-                    </button>
+              <div className="mb-10 p-6 bg-slate-50 dark:bg-slate-900/40 rounded-[32px] border border-slate-200 dark:border-slate-800/60 shadow-sm animate-in fade-in duration-500">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-4 text-right">
+                    <div className="w-12 h-12 bg-blue-600/10 text-blue-600 rounded-2xl flex items-center justify-center shadow-inner"><FileText size={24} /></div>
+                    <div><h3 className="text-sm font-black text-slate-900 dark:text-white">חומרי לימוד משותפים</h3><p className="text-[11px] text-slate-500 font-medium italic">הקבצים כאן זמינים לכל משתמשי המערכת</p></div>
                   </div>
-
-                  {showFileManager ? (
-                    <div className="animate-in slide-in-from-top-2 duration-300">
-                       <FileUploader 
-                        attachments={activeCategory.attachments} 
-                        onUpload={handleUpload} 
-                        onRemove={handleRemoveFile} 
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2 justify-start flex-row-reverse">
-                      {activeCategory.attachments.length > 0 ? (
-                        activeCategory.attachments.map(file => (
-                          <div key={file.name} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-xs overflow-hidden">
-                            <FileText size={12} className="text-blue-500 flex-shrink-0" />
-                            <span className="text-[11px] font-medium truncate max-w-[120px]">{file.name}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-[11px] text-slate-400 italic">לא הועלו קבצים. לחץ על "נהל קבצים" כדי להוסיף חומרי לימוד.</p>
-                      )}
-                    </div>
-                  )}
-               </div>
-            )}
-
-            {!activeConversation ? (
-              <div className="my-auto space-y-10 animate-in fade-in duration-500">
-                <div className="text-center space-y-4">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-[32px] bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-2xl shadow-blue-500/30 mb-4 animate-bounce-slow">
-                    <Bot size={40} />
-                  </div>
-                  <h2 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-                    {activeCategory?.name || 'במה נתעמק היום?'}
-                  </h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-base max-w-sm mx-auto">
-                    שאל כל שאלה בנוגע לחומרי הלימוד שלך. Gemini יענה על סמך הקבצים שהעלית בלבד.
-                  </p>
+                  <button onClick={() => setShowFileManager(!showFileManager)} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-2xl text-xs font-bold hover:bg-blue-700 shadow-lg transition-all active:scale-95">
+                    {showFileManager ? <X size={14} /> : <Plus size={14} />} {showFileManager ? 'סגור' : 'העלה קובץ'}
+                  </button>
                 </div>
-
-                {activeCategory?.name.includes("מבנים אלגבריים") && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
-                    {SUGGESTED_QUESTIONS.map((q, i) => (
-                      <button
-                        key={i}
-                        onClick={() => handleSend(undefined, q)}
-                        className="p-4 text-right bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-blue-400 dark:hover:border-blue-600 transition-all text-sm font-medium text-slate-600 dark:text-slate-300 shadow-sm hover:shadow-md"
-                      >
-                        {q}
-                      </button>
-                    ))}
+                {showFileManager ? <FileUploader attachments={activeCategory.attachments} onUpload={handleUpload} onRemove={handleRemoveFile} /> : (
+                  <div className="flex flex-wrap gap-2 justify-start flex-row-reverse">
+                    {activeCategory.attachments.length > 0 ? activeCategory.attachments.map(f => (
+                      <div key={f.name} className="flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xs"><FileText size={14} className="text-blue-500" /><span className="text-[11px] font-bold truncate max-w-[140px]">{f.name}</span></div>
+                    )) : <div className="w-full text-center py-6 border-2 border-dashed border-slate-200 rounded-2xl bg-white/30"><p className="text-[11px] text-slate-400 italic font-medium">התיקייה ריקה.</p></div>}
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="space-y-2">
-                {messages.map(msg => <ChatMessage key={msg.id} message={msg} />)}
-              </div>
             )}
+            {!activeConversation ? (
+              <div className="my-auto text-center space-y-8 animate-in fade-in duration-700">
+                <div className="inline-flex w-24 h-24 rounded-[36px] bg-gradient-to-br from-blue-500 to-blue-700 text-white items-center justify-center shadow-2xl mb-2 animate-bounce-slow"><Bot size={48} /></div>
+                <div className="space-y-3"><h2 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{activeCategory?.name || 'מוכנים ללמוד?'}</h2><p className="text-slate-500 dark:text-slate-400 text-sm font-medium">העוזר החכם יענה על שאלותיכם בהתבסס על החומר בלבד.</p></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
+                  {SUGGESTED_QUESTIONS.map((q, i) => ( <button key={i} onClick={() => handleSend(undefined, q)} className="p-5 text-right bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-[24px] hover:border-blue-400 shadow-sm text-sm font-bold text-slate-700 dark:text-slate-200 transition-all active:scale-[0.98]">{q}</button> ))}
+                </div>
+              </div>
+            ) : <div className="space-y-4 pb-12">{messages.map(m => <ChatMessage key={m.id} message={m} />)}</div>}
           </div>
         </div>
-
-        {/* Suggested Questions (Mobile/Context) */}
-        {activeConversation && activeCategory?.name.includes("מבנים אלגבריים") && (
-          <div className="max-w-3xl mx-auto w-full px-4 mb-2">
-            <div className="flex gap-2 overflow-x-auto pb-2 flex-row-reverse no-scrollbar">
-              {SUGGESTED_QUESTIONS.map((q, i) => (
-                <button
-                  key={i}
-                  onClick={() => setInput(q)}
-                  className="whitespace-nowrap px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-[11px] font-bold text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
-                >
-                  {q}
-                </button>
-              ))}
+        {showRespectfulWarning && (
+          <div className="mx-6 mb-4 animate-in slide-in-from-bottom-2 fade-in duration-300">
+            <div className="max-w-3xl mx-auto flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl text-amber-800 dark:text-amber-300 shadow-lg">
+              <AlertCircle size={20} className="flex-shrink-0" /><p className="text-xs font-bold leading-relaxed">שלום! כדי שאוכל לענות על שאלות בצורה מדויקת, אנא העלו תחילה חומרי לימוד (PDF או טקסט) לתיקייה שבחרתם. תודה!</p>
+              <button onClick={() => setShowRespectfulWarning(false)} className="mr-auto p-1 hover:bg-amber-100 rounded-full transition-colors"><X size={16}/></button>
             </div>
           </div>
         )}
-
-        {/* Input Bar */}
-        <div className="px-4 pb-8 pt-2 flex-shrink-0">
-          <div className="max-w-3xl mx-auto relative">
-            {error && (
-              <div className="absolute -top-16 left-0 right-0 z-10 animate-in slide-in-from-bottom-2">
-                <div className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2 rounded-xl text-xs font-bold border border-red-100 dark:border-red-800/50 flex justify-between items-center shadow-lg">
-                  <span>{error}</span>
-                  <button onClick={() => setError(null)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full">
-                    <X size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
+        <div className="px-6 pb-8 pt-2 flex-shrink-0">
+          <div className="max-w-3xl mx-auto">
             <form onSubmit={handleSend} className="relative flex items-end gap-3">
-              <div className="flex-1 relative bg-slate-50 dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-[28px] shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:bg-white dark:focus-within:bg-[#1c2128] transition-all overflow-hidden">
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }}}
-                  rows={1}
-                  maxLength={2000}
-                  placeholder={activeCategoryId ? "שלח הודעה ל-Gemini..." : "בחר קטגוריה כדי להתחיל"}
-                  disabled={!activeCategoryId || status === AppStatus.STREAMING || status === AppStatus.PROCESSING}
-                  className="w-full bg-transparent border-none py-4 pr-6 pl-24 resize-none outline-none leading-relaxed text-right min-h-[56px] max-h-60 text-[15px]"
-                  style={{ height: 'auto' }}
-                />
-                
-                {input.length > 0 && (
-                  <button 
-                    type="button"
-                    onClick={() => setInput('')}
-                    className="absolute right-4 top-4 p-1 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-
-                <div className="absolute left-3 bottom-2.5 flex items-center gap-1">
-                  <div className="text-[9px] font-mono text-slate-400 mr-1 tabular-nums">
-                    {input.length}/2000
-                  </div>
-                   <button type="button" className="p-2 text-slate-400 hover:text-blue-500 rounded-full transition-all">
-                    <Mic size={18} />
-                  </button>
-                  {status === AppStatus.PROCESSING && (
-                    <div className="p-2">
-                       <RefreshCw size={18} className="animate-spin text-blue-500" />
-                    </div>
-                  )}
-                </div>
+              <div className="flex-1 relative bg-slate-50 dark:bg-[#161b22] border border-slate-200 dark:border-slate-800 rounded-[32px] focus-within:ring-2 focus-within:ring-blue-500/20 transition-all overflow-hidden shadow-sm">
+                <textarea ref={textareaRef} value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }}} maxLength={2000} placeholder="שאל שאלה על חומרי הלימוד..." className="w-full bg-transparent border-none py-5 pr-14 pl-28 resize-none outline-none text-right text-[15px] block overflow-hidden leading-relaxed font-medium" style={{ height: 'auto', minHeight: '60px' }} />
+                {input && <button type="button" onClick={() => setInput('')} className="absolute right-5 top-1/2 -translate-y-1/2 p-1.5 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-500 transition-colors"><X size={14} /></button>}
+                <div className="absolute left-4 bottom-3 flex items-center gap-1.5"><div className={`text-[9px] font-mono mr-1 tabular-nums ${input.length > 1800 ? 'text-red-500 font-bold' : 'text-slate-400'}`}>{input.length}/2000</div><button type="button" className="p-2.5 text-slate-400 hover:text-blue-500 transition-colors"><Mic size={20} /></button>{status === AppStatus.PROCESSING && <RefreshCw size={20} className="animate-spin text-blue-500 mx-1" />}</div>
               </div>
-              
-              {status === AppStatus.STREAMING ? (
-                <button
-                  type="button"
-                  onClick={handleStop}
-                  className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center hover:bg-red-200 transition-all active:scale-90 shadow-md"
-                  title="עצור יצירה"
-                >
-                  <Square size={18} fill="currentColor" />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={!input.trim() || status !== AppStatus.IDLE || !activeCategoryId}
-                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all ${
-                    input.trim() && status === AppStatus.IDLE && activeCategoryId
-                      ? 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-90'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-300 dark:text-slate-600'
-                  }`}
-                >
-                  <Send size={20} />
-                </button>
-              )}
+              <button type={status === AppStatus.STREAMING ? "button" : "submit"} onClick={status === AppStatus.STREAMING ? handleStop : undefined} disabled={(status === AppStatus.IDLE && (!input.trim() || !activeCategoryId)) || status === AppStatus.PROCESSING} className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-all ${(input.trim() && status === AppStatus.IDLE) || status === AppStatus.STREAMING ? 'bg-blue-600 text-white shadow-xl scale-100 hover:bg-blue-700 active:scale-95' : 'bg-slate-100 dark:bg-slate-800 text-slate-300 scale-95 opacity-50'}`}><Send size={24} /></button>
             </form>
-            <div className="flex justify-center mt-3">
-               <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
-                 <Info size={12} />
-                 <span>Gemini עשוי לטעות. בדוק תמיד את המקורות שלך.</span>
-               </div>
-            </div>
           </div>
         </div>
       </main>
-      
       <style>{`
-        @keyframes bounce-slow {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-bounce-slow {
-          animation: bounce-slow 4s ease-in-out infinite;
-        }
-        ::placeholder {
-          text-align: right;
-        }
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .animate-bounce-slow { animation: bounce-slow 4s ease-in-out infinite; }
+        ::placeholder { text-align: right; }
+        textarea { unicode-bidi: plaintext; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
       `}</style>
     </div>
   );

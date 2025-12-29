@@ -4,6 +4,7 @@ export interface Attachment {
   mimeType: string;
   data: string; // base64
   size: number;
+  extractedText?: string; // For searching within content
 }
 
 export interface Message {
@@ -19,12 +20,13 @@ export interface Conversation {
   title: string;
   messages: Message[];
   updatedAt: number;
+  categoryId: string; // Link to parent category
+  userId: string;     // Link to owner (e.g., 'guest' or user email)
 }
 
 export interface Category {
   id: string;
   name: string;
-  conversations: Conversation[];
   attachments: Attachment[];
   updatedAt: number;
 }

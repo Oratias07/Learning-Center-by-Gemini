@@ -8,7 +8,7 @@ const SYSTEM_INSTRUCTION = `
 
 הנחיות קריטיות למבנה התשובה:
 1. סגנון כתיבה: כתוב בצורה זורמת, טבעית ואינטליגנטית. הימנע לחלוטין ממיספור רובוטי כמו "### 1" או "סעיף 1". השתמש בכותרות מודגשות במידת הצורך ובפסקאות קריאות.
-2. מתמטיקה ונוסחאות: כל נוסחה או ביטוי מתמטי חייבים להיכתב בתוך סימני דולר ($...$). כל הביטויים חייבים להיות בשורה אחת.
+2. מתמטיקה ונוסחאות: כל נוסחה או ביטוי מתמטי חייבים להיכתב בתוך סימני דולר ($...$). כל הביטויים חייבים להיות בשורה אחת. דוגמה: $x^2 + y^2 = r^2$.
 3. הפניות: חובה להוסיף הפניה מדויקת לכל טענה. הפורמט חייב להיות: [שם_הקובץ.סיומת, עמ' X]. אם אין מספר עמוד, ציין רק את שם הקובץ.
 4. שפה: עברית רהוטה בלבד.
 5. בדיקת סיום: וודא שהתשובה מלאה, מסתיימת בנקודה, ואינה נקטעת באמצע.
@@ -18,7 +18,7 @@ const REFINER_PROMPT = `
 תפקידך הוא "עורך לשוני" עבור תשובה של בינה מלאכותית בעברית.
 קרא את הטקסט הבא ושפר אותו לפי הכללים:
 1. הפוך את הניסוח ליותר "אנושי" ופחות "רובוטי".
-2. הסר רשימות ממוספרות כבדות (כמו 1, 2, 3) והחלף אותן בזרימה טקסטואלית או נקודות (bullets) במידה וזה נדרש.
+2. הסר רשימות ממוספרות כבדות והחלף אותן בזרימה טקסטואלית.
 3. וודא שכל הפניות הקבצים בסוגריים מרובעים נשמרות בדיוק כפי שהן.
 4. וודא שכל הביטויים המתמטיים ($...$) נשמרים.
 5. החזר אך ורק את הטקסט המשופר.
@@ -27,23 +27,27 @@ const REFINER_PROMPT = `
 `;
 
 export const validateHebrew = async (text: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: [{ role: 'user', parts: [{ text: REFINER_PROMPT + text }] }],
-    config: { temperature: 0.1 }
-  });
-  return response.text || text;
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: [{ role: 'user', parts: [{ text: REFINER_PROMPT + text }] }],
+      config: { temperature: 0.1 }
+    });
+    return response.text || text;
+  } catch (err) {
+    console.error("Refinement failed:", err);
+    return text;
+  }
 };
 
 export const generateTitle = async (text: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const response = await ai.models.generateContent({
     model: 'gemini-3-flash-preview',
-    contents: [{ role: 'user', parts: [{ text: `צור כותרת קצרה מאוד (עד 4 מילים) בעברית עבור השאלה: "${text}". אל תשתמש בסימני כוכביות או הדגשה בכלל.` }] }],
+    contents: [{ role: 'user', parts: [{ text: `צור כותרת קצרה מאוד (עד 4 מילים) בעברית עבור השאלה: "${text}". אל תשתמש בסימני כוכביות או הדגשה.` }] }],
     config: { temperature: 0.1 }
   });
-  // Clean up any remaining asterisks or quotes
   return response.text?.replace(/[*"]/g, '').trim() || "שיחה חדשה";
 };
 
@@ -88,8 +92,7 @@ export const askGemini = async (
       if (onChunk) onChunk(fullText);
     }
     
-    const refinedText = await validateHebrew(fullText);
-    return refinedText;
+    return fullText;
   } catch (error: any) {
     if (error.message?.includes("הופסקה") || abortSignal?.aborted) throw new Error("הופסקה");
     throw new Error("נכשלה התקשורת עם ה-AI.");
