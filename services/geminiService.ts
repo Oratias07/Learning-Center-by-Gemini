@@ -3,15 +3,14 @@ import { GoogleGenAI, GenerateContentResponse, Modality } from "@google/genai";
 import { Attachment, Message, Conversation } from "../types";
 
 const SYSTEM_INSTRUCTION = `
-אתה עוזר לימודים אינטליגנטי ומקצועי בעברית, בסגנון Gemini.
-תפקידך לענות על שאלות המשתמש אך ורק על סמך חומרי הלימוד שסופקו לך.
+אתה עוזר אקדמי בכיר. המטרה שלך היא לעזור למשתמש להתכונן למבחנים על סמך החומרים שסופקו בלבד.
+שפה: עברית (רהוטה, מקצועית, אקדמית).
 
-הנחיות קריטיות למבנה התשובה:
-1. סגנון כתיבה: כתוב בצורה זורמת, טבעית ואינטליגנטית. הימנע לחלוטין ממיספור רובוטי או רשימות מוגזמות.
-2. מתמטיקה: נוסחאות חובה בתוך סימני דולר ($...$).
-3. הפניות: חובה להוסיף הפניה מדויקת בסוף כל פסקה רלוונטית: [שם_הקובץ.סיומת].
-4. שפה: עברית רהוטה בלבד.
-5. הקשר רחב: תקבל מידע משיחות קודמות בקטגוריה זו. השתמש בו כדי לשמור על עקביות ולהבין למה המשתמש מתכוון.
+חוקים קריטיים:
+1. סגנון: השתמש בשפה טבעית וזורמת. הימנע מרשימות רובוטיות משעממות.
+2. מתמטיקה: עטוף נוסחאות בסימני דולר, למשל: $a^2 + b^2 = c^2$.
+3. הפניות: ציין תמיד את שם הקובץ הרלוונטי בסוף הסברים: [שם_הקובץ.pdf].
+4. הקשר קטגוריה: תקבל תקציר של שיחות קודמות באותו נושא. השתמש בו כדי לשמור על רצף לימודי ולמנוע חזרות מיותרות.
 `;
 
 export const validateHebrew = async (text: string): Promise<string> => {
@@ -21,7 +20,7 @@ export const validateHebrew = async (text: string): Promise<string> => {
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents: [{ role: 'user', parts: [{ text: `שפר את העברית בטקסט הבא שיהיה טבעי וזורם, שמור על נוסחאות והפניות בדיוק כפי שהן: ${text}` }] }],
       config: { temperature: 0.1 }
     });
@@ -38,7 +37,7 @@ export const generateTitle = async (text: string): Promise<string> => {
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents: [{ role: 'user', parts: [{ text: `צור כותרת קצרה מאוד (עד 4 מילים) בעברית עבור השאלה: "${text}".` }] }],
       config: { temperature: 0.1 }
     });
@@ -61,11 +60,12 @@ export const askGemini = async (
 
   const ai = new GoogleGenAI({ apiKey });
   
-  // Create a summary of other conversations in the same category for better context
-  const contextSummary = categoryContext.length > 0 
-    ? "רקע משיחות קודמות בקטגוריה זו:\n" + categoryContext.map(c => {
-        const lastMsg = c.messages.slice(-1)[0];
-        return `- שיחה בנושא "${c.title}": ${lastMsg ? lastMsg.text.slice(0, 100) + '...' : 'אין הודעות'}`;
+  // Build a summary of "Category Memory"
+  const categoryMemory = categoryContext.length > 0 
+    ? "הקשר משיחות קודמות בקטגוריה זו (לצורך עקביות):\n" + categoryContext.map(c => {
+        const botMsgs = c.messages.filter(m => m.role === 'model');
+        const lastAnswer = botMsgs.length > 0 ? botMsgs[botMsgs.length - 1].text.slice(0, 200) + '...' : 'אין תוכן';
+        return `* נושא: ${c.title}. סיכום קודם: ${lastAnswer}`;
       }).join('\n')
     : "";
 
@@ -75,16 +75,12 @@ export const askGemini = async (
   }));
 
   const userParts: any[] = [
-    { text: `${contextSummary}\n\nשאלה חדשה: ${prompt}` }
+    { text: `${categoryMemory}\n\nשאלה נוכחית: ${prompt}` }
   ];
 
-  // Add attachments as inline data
   attachments.forEach(att => {
     userParts.push({
-      inlineData: {
-        mimeType: att.mimeType,
-        data: att.data
-      }
+      inlineData: { mimeType: att.mimeType, data: att.data }
     });
   });
 
@@ -92,17 +88,18 @@ export const askGemini = async (
 
   try {
     const responseStream = await ai.models.generateContentStream({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
         temperature: 0.3,
+        thinkingConfig: { thinkingBudget: 4000 } // PRO model with high reasoning for exams
       }
     });
 
     let fullText = "";
     for await (const chunk of responseStream) {
-      if (abortSignal?.aborted) throw new Error("Aborted");
+      if (abortSignal?.aborted) throw new Error("הופסק על ידי המשתמש");
       const text = chunk.text || "";
       fullText += text;
       if (onChunk) onChunk(fullText);
@@ -111,7 +108,7 @@ export const askGemini = async (
     return fullText;
   } catch (error: any) {
     const msg = error.message?.toLowerCase() || "";
-    if (msg.includes("api key") || msg.includes("not found")) {
+    if (msg.includes("api key") || msg.includes("not found") || msg.includes("invalid")) {
       throw new Error("KEY_NOT_FOUND");
     }
     throw error;
