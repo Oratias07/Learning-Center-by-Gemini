@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, GenerateContentResponse, Modality } from "@google/genai";
-import { Attachment, Message } from "../types";
+import { Attachment, Message, Conversation } from "../types";
 
 const SYSTEM_INSTRUCTION = `
 אתה עוזר לימודים אינטליגנטי ומקצועי בעברית, בסגנון Gemini.
@@ -11,17 +11,18 @@ const SYSTEM_INSTRUCTION = `
 2. מתמטיקה: נוסחאות בתוך סימני דולר ($...$).
 3. הפניות: חובה להוסיף הפניה מדויקת: [שם_הקובץ.סיומת, עמ' X].
 4. שפה: עברית רהוטה בלבד.
+5. הקשר: תקבל גם מידע משיחות קודמות באותה קטגוריה כדי לשמור על עקביות.
 `;
 
 export const validateHebrew = async (text: string): Promise<string> => {
   const apiKey = process.env.API_KEY;
-  if (!apiKey) throw new Error("KEY_NOT_FOUND");
+  if (!apiKey) return text;
 
   try {
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [{ role: 'user', parts: [{ text: `שפר את העברית בטקסט הבא שיהיה טבעי וזורם, שמור על נוסחאות והפניות: ${text}` }] }],
+      contents: [{ role: 'user', parts: [{ text: `שפר את העברית בטקסט הבא שיהיה טבעי וזורם, שמור על נוסחאות והפניות בדיוק כפי שהן: ${text}` }] }],
       config: { temperature: 0.1 }
     });
     return response.text || text;
@@ -51,6 +52,7 @@ export const askGemini = async (
   prompt: string,
   history: Message[],
   attachments: Attachment[],
+  otherConversationsInCat: Conversation[],
   onChunk?: (text: string) => void,
   abortSignal?: AbortSignal
 ): Promise<string> => {
@@ -59,12 +61,17 @@ export const askGemini = async (
 
   const ai = new GoogleGenAI({ apiKey });
   
+  // בניית הקשר משיחות קודמות
+  const prevContext = otherConversationsInCat.length > 0 
+    ? "הקשר משיחות קודמות בנושא זה:\n" + otherConversationsInCat.map(c => `נושא: ${c.title}. תוכן מרכזי: ${c.messages.slice(-2).map(m => m.text).join(' ')}`).join('\n')
+    : "";
+
   const contents = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
     parts: [{ text: msg.text }]
   }));
 
-  const currentParts: any[] = [{ text: prompt }];
+  const currentParts: any[] = [{ text: `${prevContext}\n\nשאלה נוכחית: ${prompt}` }];
   attachments.forEach(att => {
     currentParts.push({
       inlineData: { mimeType: att.mimeType, data: att.data }

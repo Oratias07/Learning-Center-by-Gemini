@@ -15,12 +15,7 @@ const DEFAULT_ALGEBRA_FILES: Attachment[] = [
   { name: '2_משפטי_לגרנז.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 124000, extractedText: 'משפט לגרנז ותוצאותיו' },
   { name: '3_חבורות_נורמליות.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 98000, extractedText: 'תת חבורות נורמליות וחבורות מנה' },
   { name: '4_הומומורפיזמים.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 115000, extractedText: 'הומומורפיזמים ומשפטי האיזומורפיזם' },
-  { name: '5_חוגים_ואידיאלים.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 105000, extractedText: 'מבוא לחוגים, אידיאלים וחוגי מנה' },
-  { name: '6_פולינומים_ופריקות.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 130000, extractedText: 'חוגי פולינומים וקריטריוני פריקות' },
-  { name: '7_הרחבות_שדות.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 110000, extractedText: 'הרחבות שדות אלגבריות' },
-  { name: '8_תורת_גלואה_בסיס.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 140000, extractedText: 'מבוא לתורת גלואה' },
-  { name: '9_סיכום_מבנים_2.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 256000, extractedText: 'סיכום קורס מרוכז' },
-  { name: '10_דף_נוסחאות.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 85000, extractedText: 'נוסחאות ומשפטים למבחן' }
+  { name: '5_חוגים_ואידיאלים.pdf', mimeType: 'application/pdf', data: 'JVBERi0xLjQK...', size: 105000, extractedText: 'מבוא לחוגים, אידיאלים וחוגי מנה' }
 ];
 
 const SUGGESTED_QUESTIONS = [
@@ -32,10 +27,10 @@ const SUGGESTED_QUESTIONS = [
 
 const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = localStorage.getItem('study_shared_global_db_v8');
+    const saved = localStorage.getItem('study_shared_global_db_v10');
     return saved ? JSON.parse(saved) : [{ id: 'alg2', name: 'מבנים אלגבריים 2', attachments: DEFAULT_ALGEBRA_FILES, updatedAt: Date.now() }];
   });
-  const [allConversations, setAllConversations] = useState<Conversation[]>(() => JSON.parse(localStorage.getItem('study_private_user_chats_v8') || '[]'));
+  const [allConversations, setAllConversations] = useState<Conversation[]>(() => JSON.parse(localStorage.getItem('study_private_user_chats_v10') || '[]'));
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('study_ui_theme_pref') === 'dark');
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(categories[0]?.id || null);
@@ -48,7 +43,9 @@ const App: React.FC = () => {
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncCodeInput, setSyncCodeInput] = useState('');
   const [showRespectfulWarning, setShowRespectfulWarning] = useState(false);
-  const [hasKey, setHasKey] = useState(true);
+  
+  // הגדרת משתנה API_KEY בצורה שתזהה גם את Vercel וגם את AI Studio
+  const [hasKey, setHasKey] = useState(() => !!process.env.API_KEY);
   const [isCheckingKey, setIsCheckingKey] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -56,15 +53,18 @@ const App: React.FC = () => {
   const recognitionRef = useRef<any>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Key Check - פונקציה לבדיקת קיום מפתח
   const checkKeyStatus = async () => {
     setIsCheckingKey(true);
-    if (typeof (window as any).aistudio !== 'undefined') {
-      const selected = await (window as any).aistudio.hasSelectedApiKey();
-      setHasKey(selected || !!process.env.API_KEY);
-    } else {
-      setHasKey(!!process.env.API_KEY);
+    let keyFound = !!process.env.API_KEY;
+    
+    if (!keyFound && typeof (window as any).aistudio !== 'undefined') {
+      try {
+        const selected = await (window as any).aistudio.hasSelectedApiKey();
+        keyFound = selected;
+      } catch (e) { console.error(e); }
     }
+    
+    setHasKey(keyFound);
     setTimeout(() => setIsCheckingKey(false), 800);
   };
 
@@ -79,7 +79,10 @@ const App: React.FC = () => {
         setHasKey(true);
       } catch (err) {
         console.error("Failed to open key picker", err);
+        setHasKey(true);
       }
+    } else {
+      setHasKey(true);
     }
   };
 
@@ -95,10 +98,9 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('study_shared_global_db_v8', JSON.stringify(categories));
-    localStorage.setItem('study_private_user_chats_v8', JSON.stringify(allConversations));
+    localStorage.setItem('study_shared_global_db_v10', JSON.stringify(categories));
+    localStorage.setItem('study_private_user_chats_v10', JSON.stringify(allConversations));
     document.documentElement.classList.toggle('dark', darkMode);
-    localStorage.setItem('study_ui_theme_pref', darkMode ? 'dark' : 'light');
   }, [categories, allConversations, darkMode]);
 
   useEffect(() => {
@@ -116,41 +118,15 @@ const App: React.FC = () => {
   const activeConversation = allConversations.find(c => c.id === activeConvId);
   const messages = activeConversation?.messages || [];
 
-  // סנכרון: ייצוא מידע לקוד
-  const generateSyncCode = () => {
-    const data = {
-      categories,
-      conversations: allConversations
-    };
-    const code = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-    navigator.clipboard.writeText(code);
-    alert("קוד הסנכרון הועתק ללוח! הדבק אותו במכשיר השני.");
-  };
-
-  // סנכרון: ייבוא מידע מקוד
-  const handleImportSync = () => {
-    try {
-      const decoded = decodeURIComponent(escape(atob(syncCodeInput)));
-      const data = JSON.parse(decoded);
-      if (data.categories && data.conversations) {
-        if (confirm("האם ברצונך להחליף את כל המידע הקיים במידע מהסנכרון?")) {
-          setCategories(data.categories);
-          setAllConversations(data.conversations);
-          setShowSyncModal(false);
-          setSyncCodeInput('');
-          alert("הסנכרון הושלם בהצלחה!");
-        }
-      }
-    } catch (e) {
-      alert("קוד סנכרון לא תקין.");
-    }
-  };
-
   const handleSend = async (e?: React.FormEvent, customInput?: string) => {
     e?.preventDefault();
     const msg = customInput || input;
     if (!msg.trim() || status !== AppStatus.IDLE || !activeCategoryId) return;
-    if (!activeCategory || activeCategory.attachments.length === 0) { setShowRespectfulWarning(true); setTimeout(() => setShowRespectfulWarning(false), 3000); return; }
+    if (!activeCategory || activeCategory.attachments.length === 0) { 
+      setShowRespectfulWarning(true); 
+      setTimeout(() => setShowRespectfulWarning(false), 3000); 
+      return; 
+    }
 
     setInput('');
     setStatus(AppStatus.PROCESSING);
@@ -158,19 +134,48 @@ const App: React.FC = () => {
     let convId = activeConvId;
     if (!convId) {
       convId = Date.now().toString();
-      const title = await generateTitle(msg);
-      setAllConversations(prev => [{ id: convId!, title, messages: [], updatedAt: Date.now(), categoryId: activeCategoryId, userId: 'guest' }, ...prev]);
+      // יצירת שיחה חדשה באופן מיידי בממשק
+      const initialTitle = "שיחה חדשה...";
+      setAllConversations(prev => [{ 
+        id: convId!, 
+        title: initialTitle, 
+        messages: [], 
+        updatedAt: Date.now(), 
+        categoryId: activeCategoryId, 
+        userId: 'guest' 
+      }, ...prev]);
       setActiveConvId(convId);
+      
+      // יצירת כותרת אמיתית ברקע
+      generateTitle(msg).then(title => {
+        setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, title } : c));
+      });
     }
 
-    const streamMsgId = Date.now().toString();
-    setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, messages: [...c.messages, { id: Date.now().toString(), role: 'user', text: msg, timestamp: Date.now() }, { id: streamMsgId, role: 'model', text: '', timestamp: Date.now(), isStreaming: true }], updatedAt: Date.now() } : c));
+    const streamMsgId = (Date.now() + 1).toString();
+    const userMsgId = Date.now().toString();
+
+    // הוספת הודעת המשתמש והכנה להודעת המודל - מיידית!
+    setAllConversations(prev => prev.map(c => c.id === convId ? { 
+      ...c, 
+      messages: [
+        ...c.messages, 
+        { id: userMsgId, role: 'user', text: msg, timestamp: Date.now() }, 
+        { id: streamMsgId, role: 'model', text: '', timestamp: Date.now(), isStreaming: true }
+      ], 
+      updatedAt: Date.now() 
+    } : c));
     
     setStatus(AppStatus.STREAMING);
     abortControllerRef.current = new AbortController();
 
+    // שליפת שיחות קודמות באותה קטגוריה להקשר
+    const otherConvs = allConversations
+      .filter(c => c.categoryId === activeCategoryId && c.id !== convId)
+      .slice(0, 3);
+
     try {
-      const response = await askGemini(msg, messages, activeCategory.attachments, (text) => {
+      const response = await askGemini(msg, messages, activeCategory.attachments, otherConvs, (text) => {
         setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, messages: c.messages.map(m => m.id === streamMsgId ? { ...m, text } : m) } : c));
       }, abortControllerRef.current.signal);
       
@@ -180,6 +185,8 @@ const App: React.FC = () => {
     } catch (err: any) {
       if (err.message === 'KEY_NOT_FOUND') setHasKey(false);
       setStatus(AppStatus.IDLE);
+      // ניקוי הודעת סטרימינג שנכשלה
+      setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, messages: c.messages.filter(m => m.id !== streamMsgId) } : c));
     }
   };
 
@@ -193,28 +200,52 @@ const App: React.FC = () => {
     setCategories(prev => prev.map(cat => cat.id === activeCategoryId ? { ...cat, attachments: cat.attachments.filter(a => a.name !== fileName), updatedAt: Date.now() } : cat));
   };
 
+  const generateSyncCode = () => {
+    try {
+      const data = { categories, allConversations };
+      const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+      navigator.clipboard.writeText(base64);
+      alert("קוד הסנכרון הועתק! ניתן להדביק אותו בכל מכשיר אחר.");
+    } catch (e) { alert("שגיאה ביצירת קוד."); }
+  };
+
+  const handleImportSync = () => {
+    try {
+      const json = decodeURIComponent(escape(atob(syncCodeInput)));
+      const data = JSON.parse(json);
+      if (confirm("פעולה זו תחליף את המידע הקיים. האם להמשיך?")) {
+        setCategories(data.categories || []);
+        setAllConversations(data.allConversations || []);
+        setShowSyncModal(false);
+        setSyncCodeInput('');
+      }
+    } catch (e) { alert("קוד לא תקין."); }
+  };
+
   return (
     <div className="flex h-screen bg-white dark:bg-[#131314] overflow-hidden text-slate-900 dark:text-[#e3e3e3] font-sans transition-colors duration-300">
       
-      {/* מסך חסימה - מפתח API */}
+      {/* מסך חסימה חכם */}
       {!hasKey && (
         <div className="fixed inset-0 z-[200] bg-[#f8fafd] dark:bg-[#131314] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
-          <div className="w-24 h-24 bg-blue-600/10 text-blue-600 rounded-[40px] flex items-center justify-center mb-8 shadow-2xl animate-pulse">
-            <Lock size={48} />
+          <div className="w-20 h-20 bg-blue-600/10 text-blue-600 rounded-[30px] flex items-center justify-center mb-8 shadow-xl animate-pulse">
+            <Lock size={40} />
           </div>
-          <h2 className="text-3xl font-black mb-4 tracking-tight">נדרש חיבור ל-Gemini</h2>
-          <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md leading-relaxed">
-            המפתח שלך טרם זוהה. אם הגדרת אותו ב-Vercel, נסה ללחוץ על "בדוק חיבור שוב".
+          <h2 className="text-2xl font-black mb-4 tracking-tight">נחבר אותך לרגע...</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-sm leading-relaxed text-sm">
+            אם הגדרת את המפתח ב-Vercel והאפליקציה פרוסה, תוכל ללחוץ על "המשך". בטלפון של חבר כדאי להשתמש ב-AI Studio.
           </p>
-          <div className="flex flex-col gap-4 w-full max-w-sm">
-            <button onClick={handleOpenKeyPicker} className="w-full py-5 bg-blue-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-blue-500/30 active:scale-95 transition-all flex items-center justify-center gap-3">
-              <Key size={24} /> חבר מפתח כעת
+          <div className="flex flex-col gap-3 w-full max-w-xs">
+            <button onClick={handleOpenKeyPicker} className="w-full py-4 bg-blue-600 text-white rounded-[20px] font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+              <Key size={20} /> בחר מפתח (AI Studio)
             </button>
-            <button onClick={checkKeyStatus} className={`w-full py-4 border-2 border-slate-200 dark:border-slate-800 rounded-[24px] font-bold text-slate-500 flex items-center justify-center gap-2 transition-all ${isCheckingKey ? 'opacity-50' : 'active:bg-slate-100'}`}>
-              <RefreshCw size={18} className={isCheckingKey ? 'animate-spin' : ''} /> {isCheckingKey ? 'בודק...' : 'בדוק חיבור שוב'}
+            <button onClick={() => setHasKey(true)} className="w-full py-4 border-2 border-slate-200 dark:border-slate-800 rounded-[20px] font-bold text-slate-500 active:bg-slate-100 dark:active:bg-slate-800 transition-all">
+              המשך (המפתח כבר ב-Vercel)
+            </button>
+            <button onClick={checkKeyStatus} className={`mt-4 text-xs font-bold text-blue-500 flex items-center justify-center gap-2 ${isCheckingKey ? 'opacity-50' : ''}`}>
+              <RefreshCw size={14} className={isCheckingKey ? 'animate-spin' : ''} /> בדוק שוב
             </button>
           </div>
-          <p className="mt-12 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Powered by Google Gemini 3</p>
         </div>
       )}
 
@@ -331,7 +362,6 @@ const App: React.FC = () => {
                 )}
               </div>
             </form>
-            <p className="text-[9px] md:text-[10px] text-center mt-3 text-slate-400 dark:text-[#c4c7c5] font-medium">Gemini עשוי להציג מידע לא מדויק. המידע מבוסס על המאגר שלך.</p>
           </div>
         </div>
       </main>
@@ -339,7 +369,7 @@ const App: React.FC = () => {
       {/* Sync Modal */}
       {showSyncModal && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-          <div className="bg-white dark:bg-[#1e1f20] w-full max-w-lg rounded-[32px] overflow-hidden p-6 md:p-10 shadow-2xl">
+          <div className="bg-white dark:bg-[#1e1f20] w-full max-w-lg rounded-[32px] overflow-hidden p-6 md:p-10 shadow-2xl text-right">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-black">סנכרון וגיבוי</h3>
               <button onClick={() => setShowSyncModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full"><X size={24}/></button>
@@ -347,24 +377,24 @@ const App: React.FC = () => {
             
             <div className="space-y-8">
               <div className="p-5 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                <h4 className="font-black text-sm mb-2 text-blue-800 dark:text-blue-300">ייצוא מידע (סנכרון למכשיר אחר)</h4>
-                <p className="text-xs text-blue-600/80 mb-4 font-medium">העתק את הקוד הבא והדבק אותו במכשיר השני כדי להעביר את כל השיחות והקבצים.</p>
-                <button onClick={generateSyncCode} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all">
+                <h4 className="font-black text-sm mb-2 text-blue-800 dark:text-blue-300">ייצוא מידע</h4>
+                <p className="text-xs text-blue-600/80 mb-4 font-medium">העתק את הקוד והדבק אותו במכשיר השני.</p>
+                <button onClick={generateSyncCode} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
                   <Share2 size={16} /> העתק קוד סנכרון
                 </button>
               </div>
 
               <div className="p-5 bg-slate-50 dark:bg-[#28292a] rounded-2xl border border-slate-100 dark:border-slate-800">
                 <h4 className="font-black text-sm mb-2">ייבוא מידע</h4>
-                <p className="text-xs text-slate-500 mb-4 font-medium">הדבק כאן קוד סנכרון שקיבלת ממכשיר אחר.</p>
                 <textarea 
                   value={syncCodeInput}
                   onChange={(e) => setSyncCodeInput(e.target.value)}
                   placeholder="הדבק קוד כאן..."
-                  className="w-full h-24 p-3 bg-white dark:bg-[#131314] border border-slate-200 dark:border-slate-700 rounded-xl text-[10px] font-mono mb-4 outline-none focus:border-blue-400 transition-all"
+                  className="w-full h-24 p-3 bg-white dark:bg-[#131314] border border-slate-200 dark:border-slate-700 rounded-xl text-[10px] font-mono mb-4 outline-none text-left"
+                  dir="ltr"
                 />
-                <button onClick={handleImportSync} className="w-full py-3 bg-slate-900 dark:bg-blue-900/40 text-white rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all">
-                  <DownloadCloud size={16} /> סנכרן נתונים כעת
+                <button onClick={handleImportSync} className="w-full py-3 bg-slate-900 dark:bg-blue-900/40 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
+                  <DownloadCloud size={16} /> סנכרן נתונים
                 </button>
               </div>
             </div>
@@ -399,7 +429,6 @@ const App: React.FC = () => {
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-        @media (max-width: 1023px) { .custom-scrollbar::-webkit-scrollbar { width: 0px; } }
       `}</style>
     </div>
   );
