@@ -27,10 +27,10 @@ const SUGGESTED_QUESTIONS = [
 
 const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>(() => {
-    const saved = localStorage.getItem('study_shared_global_db_v10');
+    const saved = localStorage.getItem('study_shared_global_db_v11');
     return saved ? JSON.parse(saved) : [{ id: 'alg2', name: 'מבנים אלגבריים 2', attachments: DEFAULT_ALGEBRA_FILES, updatedAt: Date.now() }];
   });
-  const [allConversations, setAllConversations] = useState<Conversation[]>(() => JSON.parse(localStorage.getItem('study_private_user_chats_v10') || '[]'));
+  const [allConversations, setAllConversations] = useState<Conversation[]>(() => JSON.parse(localStorage.getItem('study_private_user_chats_v11') || '[]'));
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('study_ui_theme_pref') === 'dark');
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(categories[0]?.id || null);
@@ -42,9 +42,8 @@ const App: React.FC = () => {
   const [showFileManager, setShowFileManager] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [syncCodeInput, setSyncCodeInput] = useState('');
-  const [showRespectfulWarning, setShowRespectfulWarning] = useState(false);
   
-  // הגדרת משתנה API_KEY בצורה שתזהה גם את Vercel וגם את AI Studio
+  // Critical for Vercel: process.env.API_KEY is accessible if defined in build
   const [hasKey, setHasKey] = useState(() => !!process.env.API_KEY);
   const [isCheckingKey, setIsCheckingKey] = useState(false);
 
@@ -57,15 +56,16 @@ const App: React.FC = () => {
     setIsCheckingKey(true);
     let keyFound = !!process.env.API_KEY;
     
+    // Check if AI Studio session has key
     if (!keyFound && typeof (window as any).aistudio !== 'undefined') {
       try {
         const selected = await (window as any).aistudio.hasSelectedApiKey();
         keyFound = selected;
-      } catch (e) { console.error(e); }
+      } catch (e) {}
     }
     
     setHasKey(keyFound);
-    setTimeout(() => setIsCheckingKey(false), 800);
+    setTimeout(() => setIsCheckingKey(false), 500);
   };
 
   useEffect(() => {
@@ -76,9 +76,8 @@ const App: React.FC = () => {
     if (typeof (window as any).aistudio !== 'undefined') {
       try {
         await (window as any).aistudio.openSelectKey();
-        setHasKey(true);
+        setHasKey(true); // Proceed immediately as per instructions
       } catch (err) {
-        console.error("Failed to open key picker", err);
         setHasKey(true);
       }
     } else {
@@ -98,9 +97,10 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('study_shared_global_db_v10', JSON.stringify(categories));
-    localStorage.setItem('study_private_user_chats_v10', JSON.stringify(allConversations));
+    localStorage.setItem('study_shared_global_db_v11', JSON.stringify(categories));
+    localStorage.setItem('study_private_user_chats_v11', JSON.stringify(allConversations));
     document.documentElement.classList.toggle('dark', darkMode);
+    localStorage.setItem('study_ui_theme_pref', darkMode ? 'dark' : 'light');
   }, [categories, allConversations, darkMode]);
 
   useEffect(() => {
@@ -122,19 +122,13 @@ const App: React.FC = () => {
     e?.preventDefault();
     const msg = customInput || input;
     if (!msg.trim() || status !== AppStatus.IDLE || !activeCategoryId) return;
-    if (!activeCategory || activeCategory.attachments.length === 0) { 
-      setShowRespectfulWarning(true); 
-      setTimeout(() => setShowRespectfulWarning(false), 3000); 
-      return; 
-    }
-
+    
     setInput('');
     setStatus(AppStatus.PROCESSING);
     
     let convId = activeConvId;
     if (!convId) {
       convId = Date.now().toString();
-      // יצירת שיחה חדשה באופן מיידי בממשק
       const initialTitle = "שיחה חדשה...";
       setAllConversations(prev => [{ 
         id: convId!, 
@@ -146,22 +140,21 @@ const App: React.FC = () => {
       }, ...prev]);
       setActiveConvId(convId);
       
-      // יצירת כותרת אמיתית ברקע
       generateTitle(msg).then(title => {
         setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, title } : c));
       });
     }
 
-    const streamMsgId = (Date.now() + 1).toString();
     const userMsgId = Date.now().toString();
+    const botMsgId = (Date.now() + 1).toString();
 
-    // הוספת הודעת המשתמש והכנה להודעת המודל - מיידית!
+    // IMMEDIATE RENDER
     setAllConversations(prev => prev.map(c => c.id === convId ? { 
       ...c, 
       messages: [
         ...c.messages, 
         { id: userMsgId, role: 'user', text: msg, timestamp: Date.now() }, 
-        { id: streamMsgId, role: 'model', text: '', timestamp: Date.now(), isStreaming: true }
+        { id: botMsgId, role: 'model', text: '', timestamp: Date.now(), isStreaming: true }
       ], 
       updatedAt: Date.now() 
     } : c));
@@ -169,24 +162,34 @@ const App: React.FC = () => {
     setStatus(AppStatus.STREAMING);
     abortControllerRef.current = new AbortController();
 
-    // שליפת שיחות קודמות באותה קטגוריה להקשר
-    const otherConvs = allConversations
+    // Collect other conversations in the same category for enhanced context
+    const categoryConvs = allConversations
       .filter(c => c.categoryId === activeCategoryId && c.id !== convId)
-      .slice(0, 3);
+      .slice(0, 4); // Include last 4 relevant topics
 
     try {
-      const response = await askGemini(msg, messages, activeCategory.attachments, otherConvs, (text) => {
-        setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, messages: c.messages.map(m => m.id === streamMsgId ? { ...m, text } : m) } : c));
+      const response = await askGemini(msg, messages, activeCategory?.attachments || [], categoryConvs, (text) => {
+        setAllConversations(prev => prev.map(c => c.id === convId ? { 
+          ...c, 
+          messages: c.messages.map(m => m.id === botMsgId ? { ...m, text } : m) 
+        } : c));
       }, abortControllerRef.current.signal);
       
       const validated = await validateHebrew(response);
-      setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, messages: c.messages.map(m => m.id === streamMsgId ? { ...m, text: validated, isStreaming: false } : m) } : c));
+      setAllConversations(prev => prev.map(c => c.id === convId ? { 
+        ...c, 
+        messages: c.messages.map(m => m.id === botMsgId ? { ...m, text: validated, isStreaming: false } : m) 
+      } : c));
       setStatus(AppStatus.IDLE);
     } catch (err: any) {
-      if (err.message === 'KEY_NOT_FOUND') setHasKey(false);
+      if (err.message === 'KEY_NOT_FOUND') {
+        setHasKey(false);
+      }
       setStatus(AppStatus.IDLE);
-      // ניקוי הודעת סטרימינג שנכשלה
-      setAllConversations(prev => prev.map(c => c.id === convId ? { ...c, messages: c.messages.filter(m => m.id !== streamMsgId) } : c));
+      setAllConversations(prev => prev.map(c => c.id === convId ? { 
+        ...c, 
+        messages: c.messages.map(m => m.id === botMsgId ? { ...m, text: "אירעה שגיאה בחיבור לשרת. בדוק את מפתח ה-API שלך.", isStreaming: false } : m) 
+      } : c));
     }
   };
 
@@ -205,7 +208,7 @@ const App: React.FC = () => {
       const data = { categories, allConversations };
       const base64 = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
       navigator.clipboard.writeText(base64);
-      alert("קוד הסנכרון הועתק! ניתן להדביק אותו בכל מכשיר אחר.");
+      alert("קוד הסנכרון הועתק!");
     } catch (e) { alert("שגיאה ביצירת קוד."); }
   };
 
@@ -213,7 +216,7 @@ const App: React.FC = () => {
     try {
       const json = decodeURIComponent(escape(atob(syncCodeInput)));
       const data = JSON.parse(json);
-      if (confirm("פעולה זו תחליף את המידע הקיים. האם להמשיך?")) {
+      if (confirm("האם להחליף את כל הנתונים בנתונים מהקוד?")) {
         setCategories(data.categories || []);
         setAllConversations(data.allConversations || []);
         setShowSyncModal(false);
@@ -225,7 +228,7 @@ const App: React.FC = () => {
   return (
     <div className="flex h-screen bg-white dark:bg-[#131314] overflow-hidden text-slate-900 dark:text-[#e3e3e3] font-sans transition-colors duration-300">
       
-      {/* מסך חסימה חכם */}
+      {/* Smart Blocking Screen - prioritized for Vercel */}
       {!hasKey && (
         <div className="fixed inset-0 z-[200] bg-[#f8fafd] dark:bg-[#131314] flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
           <div className="w-20 h-20 bg-blue-600/10 text-blue-600 rounded-[30px] flex items-center justify-center mb-8 shadow-xl animate-pulse">
@@ -233,7 +236,7 @@ const App: React.FC = () => {
           </div>
           <h2 className="text-2xl font-black mb-4 tracking-tight">נחבר אותך לרגע...</h2>
           <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-sm leading-relaxed text-sm">
-            אם הגדרת את המפתח ב-Vercel והאפליקציה פרוסה, תוכל ללחוץ על "המשך". בטלפון של חבר כדאי להשתמש ב-AI Studio.
+            אם הגדרת את המפתח ב-Vercel והאפליקציה פרוסה מחדש, תוכל ללחוץ על "המשך". בטלפון של חבר מומלץ להשתמש ב-AI Studio.
           </p>
           <div className="flex flex-col gap-3 w-full max-w-xs">
             <button onClick={handleOpenKeyPicker} className="w-full py-4 bg-blue-600 text-white rounded-[20px] font-bold shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">

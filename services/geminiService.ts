@@ -7,11 +7,11 @@ const SYSTEM_INSTRUCTION = `
 תפקידך לענות על שאלות המשתמש אך ורק על סמך חומרי הלימוד שסופקו לך.
 
 הנחיות קריטיות למבנה התשובה:
-1. סגנון כתיבה: כתוב בצורה זורמת, טבעית ואינטליגנטית. הימנע לחלוטין ממיספור רובוטי.
-2. מתמטיקה: נוסחאות בתוך סימני דולר ($...$).
-3. הפניות: חובה להוסיף הפניה מדויקת: [שם_הקובץ.סיומת, עמ' X].
+1. סגנון כתיבה: כתוב בצורה זורמת, טבעית ואינטליגנטית. הימנע לחלוטין ממיספור רובוטי או רשימות מוגזמות.
+2. מתמטיקה: נוסחאות חובה בתוך סימני דולר ($...$).
+3. הפניות: חובה להוסיף הפניה מדויקת בסוף כל פסקה רלוונטית: [שם_הקובץ.סיומת].
 4. שפה: עברית רהוטה בלבד.
-5. הקשר: תקבל גם מידע משיחות קודמות באותה קטגוריה כדי לשמור על עקביות.
+5. הקשר רחב: תקבל מידע משיחות קודמות בקטגוריה זו. השתמש בו כדי לשמור על עקביות ולהבין למה המשתמש מתכוון.
 `;
 
 export const validateHebrew = async (text: string): Promise<string> => {
@@ -52,7 +52,7 @@ export const askGemini = async (
   prompt: string,
   history: Message[],
   attachments: Attachment[],
-  otherConversationsInCat: Conversation[],
+  categoryContext: Conversation[],
   onChunk?: (text: string) => void,
   abortSignal?: AbortSignal
 ): Promise<string> => {
@@ -61,9 +61,12 @@ export const askGemini = async (
 
   const ai = new GoogleGenAI({ apiKey });
   
-  // בניית הקשר משיחות קודמות
-  const prevContext = otherConversationsInCat.length > 0 
-    ? "הקשר משיחות קודמות בנושא זה:\n" + otherConversationsInCat.map(c => `נושא: ${c.title}. תוכן מרכזי: ${c.messages.slice(-2).map(m => m.text).join(' ')}`).join('\n')
+  // Create a summary of other conversations in the same category for better context
+  const contextSummary = categoryContext.length > 0 
+    ? "רקע משיחות קודמות בקטגוריה זו:\n" + categoryContext.map(c => {
+        const lastMsg = c.messages.slice(-1)[0];
+        return `- שיחה בנושא "${c.title}": ${lastMsg ? lastMsg.text.slice(0, 100) + '...' : 'אין הודעות'}`;
+      }).join('\n')
     : "";
 
   const contents = history.map(msg => ({
@@ -71,14 +74,21 @@ export const askGemini = async (
     parts: [{ text: msg.text }]
   }));
 
-  const currentParts: any[] = [{ text: `${prevContext}\n\nשאלה נוכחית: ${prompt}` }];
+  const userParts: any[] = [
+    { text: `${contextSummary}\n\nשאלה חדשה: ${prompt}` }
+  ];
+
+  // Add attachments as inline data
   attachments.forEach(att => {
-    currentParts.push({
-      inlineData: { mimeType: att.mimeType, data: att.data }
+    userParts.push({
+      inlineData: {
+        mimeType: att.mimeType,
+        data: att.data
+      }
     });
   });
 
-  contents.push({ role: 'user', parts: currentParts });
+  contents.push({ role: 'user', parts: userParts });
 
   try {
     const responseStream = await ai.models.generateContentStream({
@@ -86,13 +96,13 @@ export const askGemini = async (
       contents,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.2,
+        temperature: 0.3,
       }
     });
 
     let fullText = "";
     for await (const chunk of responseStream) {
-      if (abortSignal?.aborted) throw new Error("הפעולה הופסקה");
+      if (abortSignal?.aborted) throw new Error("Aborted");
       const text = chunk.text || "";
       fullText += text;
       if (onChunk) onChunk(fullText);
@@ -100,8 +110,8 @@ export const askGemini = async (
     
     return fullText;
   } catch (error: any) {
-    const errorMsg = error.message?.toLowerCase() || "";
-    if (errorMsg.includes("api key") || errorMsg.includes("not found") || errorMsg.includes("invalid")) {
+    const msg = error.message?.toLowerCase() || "";
+    if (msg.includes("api key") || msg.includes("not found")) {
       throw new Error("KEY_NOT_FOUND");
     }
     throw error;
