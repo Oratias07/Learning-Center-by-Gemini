@@ -7,48 +7,44 @@ const SYSTEM_INSTRUCTION = `
 תפקידך לענות על שאלות המשתמש אך ורק על סמך חומרי הלימוד שסופקו לך.
 
 הנחיות קריטיות למבנה התשובה:
-1. סגנון כתיבה: כתוב בצורה זורמת, טבעית ואינטליגנטית. הימנע לחלוטין ממיספור רובוטי כמו "### 1" או "סעיף 1". השתמש בכותרות מודגשות במידת הצורך ובפסקאות קריאות.
-2. מתמטיקה ונוסחאות: כל נוסחה או ביטוי מתמטי חייבים להיכתב בתוך סימני דולר ($...$). כל הביטויים חייבים להיות בשורה אחת. דוגמה: $x^2 + y^2 = r^2$.
-3. הפניות: חובה להוסיף הפניה מדויקת לכל טענה. הפורמט חייב להיות: [שם_הקובץ.סיומת, עמ' X]. אם אין מספר עמוד, ציין רק את שם הקובץ.
+1. סגנון כתיבה: כתוב בצורה זורמת, טבעית ואינטליגנטית. הימנע לחלוטין ממיספור רובוטי.
+2. מתמטיקה: נוסחאות בתוך סימני דולר ($...$).
+3. הפניות: חובה להוסיף הפניה מדויקת: [שם_הקובץ.סיומת, עמ' X].
 4. שפה: עברית רהוטה בלבד.
-5. בדיקת סיום: וודא שהתשובה מלאה, מסתיימת בנקודה, ואינה נקטעת באמצע.
-`;
-
-const REFINER_PROMPT = `
-תפקידך הוא "עורך לשוני" עבור תשובה של בינה מלאכותית בעברית.
-קרא את הטקסט הבא ושפר אותו לפי הכללים:
-1. הפוך את הניסוח ליותר "אנושי" ופחות "רובוטי".
-2. הסר רשימות ממוספרות כבדות והחלף אותן בזרימה טקסטואלית.
-3. וודא שכל הפניות הקבצים בסוגריים מרובעים נשמרות בדיוק כפי שהן.
-4. וודא שכל הביטויים המתמטיים ($...$) נשמרים.
-5. החזר אך ורק את הטקסט המשופר.
-
-הטקסט לעריכה:
 `;
 
 export const validateHebrew = async (text: string): Promise<string> => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("KEY_NOT_FOUND");
+
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [{ role: 'user', parts: [{ text: REFINER_PROMPT + text }] }],
+      contents: [{ role: 'user', parts: [{ text: `שפר את העברית בטקסט הבא שיהיה טבעי וזורם, שמור על נוסחאות והפניות: ${text}` }] }],
       config: { temperature: 0.1 }
     });
     return response.text || text;
   } catch (err) {
-    console.error("Refinement failed:", err);
     return text;
   }
 };
 
 export const generateTitle = async (text: string): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: [{ role: 'user', parts: [{ text: `צור כותרת קצרה מאוד (עד 4 מילים) בעברית עבור השאלה: "${text}". אל תשתמש בסימני כוכביות או הדגשה.` }] }],
-    config: { temperature: 0.1 }
-  });
-  return response.text?.replace(/[*"]/g, '').trim() || "שיחה חדשה";
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return "שיחה חדשה";
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: [{ role: 'user', parts: [{ text: `צור כותרת קצרה מאוד (עד 4 מילים) בעברית עבור השאלה: "${text}".` }] }],
+      config: { temperature: 0.1 }
+    });
+    return response.text?.replace(/[*"]/g, '').trim() || "שיחה חדשה";
+  } catch (err) {
+    return "שיחה חדשה";
+  }
 };
 
 export const askGemini = async (
@@ -58,7 +54,10 @@ export const askGemini = async (
   onChunk?: (text: string) => void,
   abortSignal?: AbortSignal
 ): Promise<string> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) throw new Error("KEY_NOT_FOUND");
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const contents = history.map(msg => ({
     role: msg.role === 'user' ? 'user' : 'model',
@@ -94,7 +93,10 @@ export const askGemini = async (
     
     return fullText;
   } catch (error: any) {
-    if (error.message?.includes("הופסקה") || abortSignal?.aborted) throw new Error("הופסקה");
-    throw new Error("נכשלה התקשורת עם ה-AI.");
+    const errorMsg = error.message?.toLowerCase() || "";
+    if (errorMsg.includes("api key") || errorMsg.includes("not found") || errorMsg.includes("invalid")) {
+      throw new Error("KEY_NOT_FOUND");
+    }
+    throw error;
   }
 };
